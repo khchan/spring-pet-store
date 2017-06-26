@@ -4,6 +4,7 @@ import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.service.PetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,5 +22,10 @@ public class PetController {
     @GetMapping(value = "/pets")
     public List<Pet> findAllPets() {
         return petService.findAllPets();
+    }
+
+    @GetMapping(value = "/pet/{id}")
+    public Pet findPet(@PathVariable("id") Long id) {
+        return petService.findPet(id);
     }
 }

@@ -1,5 +1,6 @@
 package com.khchan.petstore.service;
 
+import com.khchan.petstore.domain.PetEntity;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.repository.PetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,13 @@ public class PetService {
     }
 
     public List<Pet> findAllPets() {
-        return petRepository.findAll().stream().map(petTransformer::transformEntityToDTO).collect(Collectors.toList());
+        return petRepository.findAll().stream()
+            .map(petTransformer::transformEntityToDTO)
+            .collect(Collectors.toList());
+    }
+
+    public Pet findPet(Long id) {
+        PetEntity petEntity = petRepository.findOne(id);
+        return petTransformer.transformEntityToDTO(petEntity);
     }
 }

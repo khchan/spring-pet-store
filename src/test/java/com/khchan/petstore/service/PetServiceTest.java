@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -37,6 +38,15 @@ public class PetServiceTest {
         fixture.findAllPets();
 
         verify(petRepository).findAll();
+    }
+
+    @Test
+    public void findPet() throws Exception {
+        Long petId = 1L;
+
+        fixture.findPet(petId);
+
+        verify(petRepository).findOne(eq(petId));
     }
 
 }
