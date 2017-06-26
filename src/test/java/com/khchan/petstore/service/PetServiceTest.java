@@ -59,6 +59,15 @@ public class PetServiceTest {
         verify(petRepository).save(any(PetEntity.class));
     }
 
+    @Test
+    public void removePet() throws Exception {
+        Long petId = 1L;
+
+        fixture.removePet(petId);
+
+        verify(petRepository).delete(eq(petId));
+    }
+
     private Pet createPetDTO() {
         return Pet.builder()
             .id(1L)

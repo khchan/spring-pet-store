@@ -3,6 +3,7 @@ package com.khchan.petstore.controller;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.service.PetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class PetController {
     }
 
     @PostMapping(value = "/pet")
+    @ResponseStatus(HttpStatus.CREATED)
     public Pet createPet(@RequestBody Pet pet) {
         return petService.savePet(pet);
     }
@@ -35,5 +37,10 @@ public class PetController {
     @PutMapping(value ="/pet")
     public Pet updatePet(@RequestBody Pet pet) {
         return petService.savePet(pet);
+    }
+
+    @DeleteMapping(value = "/pet/{id}")
+    public void removePet(@PathVariable("id") Long id) {
+        petService.removePet(id);
     }
 }

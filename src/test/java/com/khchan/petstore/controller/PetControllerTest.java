@@ -21,9 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.Charset;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -81,7 +79,7 @@ public class PetControllerTest {
         mockMvc.perform(post("/pet")
             .header("Content-Type", "application/json")
             .content(jsonMapper.writeValueAsString(pet)))
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(content().contentType(contentType));
     }
 
@@ -94,6 +92,13 @@ public class PetControllerTest {
             .content(jsonMapper.writeValueAsString(pet)))
             .andExpect(status().isOk())
             .andExpect(content().contentType(contentType));
+    }
+
+    @Test
+    public void removePet() throws Exception {
+        mockMvc.perform(delete("/pet/" + PET_ID.toString())
+            .header("Content-Type", "application/json"))
+            .andExpect(status().isOk());
     }
 
 }

@@ -36,4 +36,8 @@ public class PetService {
         PetEntity petEntity = petRepository.save(petTransformer.transformDTOToEntity(pet));
         return petTransformer.transformEntityToDTO(petEntity);
     }
+
+    public void removePet(Long id) {
+        petRepository.delete(id);
+    }
 }
