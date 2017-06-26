@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "pets")
@@ -26,4 +27,13 @@ public class PetEntity {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany
+    private List<Media> media;
+
+    @ManyToMany(cascade = CascadeType.MERGE)
+    @JoinTable(name = "pet_tags",
+        joinColumns = @JoinColumn(name = "pet_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private List<TagEntity> tags;
 }
