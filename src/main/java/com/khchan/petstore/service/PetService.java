@@ -31,4 +31,9 @@ public class PetService {
         PetEntity petEntity = petRepository.findOne(id);
         return petTransformer.transformEntityToDTO(petEntity);
     }
+
+    public Pet savePet(Pet pet) {
+        PetEntity petEntity = petRepository.save(petTransformer.transformDTOToEntity(pet));
+        return petTransformer.transformEntityToDTO(petEntity);
+    }
 }

@@ -1,5 +1,6 @@
 package com.khchan.petstore.service;
 
+import com.khchan.petstore.domain.Status;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.domain.PetEntity;
 import com.khchan.petstore.repository.PetRepository;
@@ -47,6 +48,22 @@ public class PetServiceTest {
         fixture.findPet(petId);
 
         verify(petRepository).findOne(eq(petId));
+    }
+
+    @Test
+    public void savePet() throws Exception {
+        Pet newPetDTO = createPetDTO();
+
+        fixture.savePet(newPetDTO);
+
+        verify(petRepository).save(any(PetEntity.class));
+    }
+
+    private Pet createPetDTO() {
+        return Pet.builder()
+            .id(1L)
+            .name("Fluffy")
+            .status(Status.AVAILABLE).build();
     }
 
 }
