@@ -1,1 +1,0 @@
-insert into pets values(nextval('pets_id_seq'), 'Fluffy', 0);

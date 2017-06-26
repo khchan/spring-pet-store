@@ -1,0 +1,1 @@
+insert into pets values(1, 'Fluffy', 0);
