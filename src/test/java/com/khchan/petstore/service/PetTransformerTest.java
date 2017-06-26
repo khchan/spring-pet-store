@@ -1,5 +1,6 @@
 package com.khchan.petstore.service;
 
+import com.khchan.petstore.domain.Category;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.domain.PetEntity;
 import com.khchan.petstore.domain.Status;
@@ -11,6 +12,8 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.Assert.*;
 
 public class PetTransformerTest {
+
+    private final Category dogCategory = Category.builder().id(1L).name("Dogs").build();
 
     @InjectMocks
     private PetTransformer fixture;
@@ -26,6 +29,7 @@ public class PetTransformerTest {
             .id(1L)
             .name("Fluffy")
             .status(Status.AVAILABLE)
+            .category(dogCategory)
             .build();
 
         Pet actual = fixture.transformEntityToDTO(petEntity);
@@ -33,6 +37,7 @@ public class PetTransformerTest {
         assertEquals(Long.valueOf(1), actual.getId());
         assertEquals("Fluffy", actual.getName());
         assertEquals(Status.AVAILABLE, actual.getStatus());
+        assertEquals("Dogs", actual.getCategory().getName());
     }
 
     @Test
@@ -41,6 +46,7 @@ public class PetTransformerTest {
             .id(1L)
             .name("Fluffy")
             .status(Status.AVAILABLE)
+            .category(dogCategory)
             .build();
 
         PetEntity actual = fixture.transformDTOToEntity(petDTO);
@@ -48,6 +54,7 @@ public class PetTransformerTest {
         assertEquals(Long.valueOf(1), actual.getId());
         assertEquals("Fluffy", actual.getName());
         assertEquals(Status.AVAILABLE, actual.getStatus());
+        assertEquals("Dogs", actual.getCategory().getName());
     }
 
 }

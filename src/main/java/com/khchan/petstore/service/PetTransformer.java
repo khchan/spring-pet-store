@@ -11,6 +11,7 @@ public class PetTransformer {
             .id(petEntity.getId())
             .name(petEntity.getName())
             .status(petEntity.getStatus())
+            .category(petEntity.getCategory())
             .build();
     }
 
@@ -19,6 +20,7 @@ public class PetTransformer {
             .id(petDTO.getId())
             .name(petDTO.getName())
             .status(petDTO.getStatus())
+            .category(petDTO.getCategory())
             .build();
     }
 }
