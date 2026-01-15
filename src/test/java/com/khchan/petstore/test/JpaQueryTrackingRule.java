@@ -1,21 +1,21 @@
 package com.khchan.petstore.test;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * JUnit Rule for tracking and asserting JPA/SQL query counts and transaction events.
+ * JUnit 5 Extension for tracking and asserting JPA/SQL query counts and transaction events.
  *
  * Usage:
  * <pre>
  * {@code
- * @Rule
- * public JpaQueryTrackingRule queryTracking = new JpaQueryTrackingRule();
+ * @RegisterExtension
+ * JpaQueryTrackingRule queryTracking = new JpaQueryTrackingRule();
  *
  * @Test
  * public void testNoNPlusOne() {
@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
  * }
  * </pre>
  */
-public class JpaQueryTrackingRule implements TestRule {
+public class JpaQueryTrackingRule implements BeforeEachCallback, AfterEachCallback {
 
     private boolean printQueriesOnFailure = true;
     private boolean printQueriesAlways = false;
@@ -49,41 +49,35 @@ public class JpaQueryTrackingRule implements TestRule {
     }
 
     @Override
-    public Statement apply(Statement base, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                // Reset counters before each test
-                QueryCounter.reset();
-                TransactionTracker.reset();
+    public void beforeEach(ExtensionContext context) {
+        // Reset counters before each test
+        QueryCounter.reset();
+        TransactionTracker.reset();
+    }
 
-                try {
-                    base.evaluate();
+    @Override
+    public void afterEach(ExtensionContext context) {
+        if (printQueriesAlways) {
+            System.out.println("\n" + QueryCounter.getDetailedReport());
+            System.out.println(TransactionTracker.getDetailedReport());
+        }
 
-                    if (printQueriesAlways) {
-                        System.out.println("\n" + QueryCounter.getDetailedReport());
-                        System.out.println(TransactionTracker.getDetailedReport());
-                    }
-                } catch (Throwable t) {
-                    if (printQueriesOnFailure) {
-                        System.err.println("\n=== TEST FAILED: Query and Transaction Report ===");
-                        System.err.println(QueryCounter.getDetailedReport());
-                        System.err.println(TransactionTracker.getDetailedReport());
-                        System.err.println("=================================================\n");
-                    }
-                    throw t;
-                }
-            }
-        };
+        // Check if test failed and print debug info
+        if (printQueriesOnFailure && context.getExecutionException().isPresent()) {
+            System.err.println("\n=== TEST FAILED: Query and Transaction Report ===");
+            System.err.println(QueryCounter.getDetailedReport());
+            System.err.println(TransactionTracker.getDetailedReport());
+            System.err.println("=================================================\n");
+        }
     }
 
     // ========== Query Count Assertions ==========
 
     public void assertSelectCount(int expected) {
         assertEquals(
-            formatMessage("SELECT count", expected, QueryCounter.getSelectCount()),
             expected,
-            QueryCounter.getSelectCount()
+            QueryCounter.getSelectCount(),
+            formatMessage("SELECT count", expected, QueryCounter.getSelectCount())
         );
     }
 
@@ -109,33 +103,33 @@ public class JpaQueryTrackingRule implements TestRule {
 
     public void assertInsertCount(int expected) {
         assertEquals(
-            formatMessage("INSERT count", expected, QueryCounter.getInsertCount()),
             expected,
-            QueryCounter.getInsertCount()
+            QueryCounter.getInsertCount(),
+            formatMessage("INSERT count", expected, QueryCounter.getInsertCount())
         );
     }
 
     public void assertUpdateCount(int expected) {
         assertEquals(
-            formatMessage("UPDATE count", expected, QueryCounter.getUpdateCount()),
             expected,
-            QueryCounter.getUpdateCount()
+            QueryCounter.getUpdateCount(),
+            formatMessage("UPDATE count", expected, QueryCounter.getUpdateCount())
         );
     }
 
     public void assertDeleteCount(int expected) {
         assertEquals(
-            formatMessage("DELETE count", expected, QueryCounter.getDeleteCount()),
             expected,
-            QueryCounter.getDeleteCount()
+            QueryCounter.getDeleteCount(),
+            formatMessage("DELETE count", expected, QueryCounter.getDeleteCount())
         );
     }
 
     public void assertTotalQueryCount(int expected) {
         assertEquals(
-            formatMessage("Total query count", expected, QueryCounter.getTotalCount()),
             expected,
-            QueryCounter.getTotalCount()
+            QueryCounter.getTotalCount(),
+            formatMessage("Total query count", expected, QueryCounter.getTotalCount())
         );
     }
 
@@ -167,45 +161,45 @@ public class JpaQueryTrackingRule implements TestRule {
 
     public void assertCommitCount(int expected) {
         assertEquals(
-            formatMessage("COMMIT count", expected, TransactionTracker.getCommitCount()),
             expected,
-            TransactionTracker.getCommitCount()
+            TransactionTracker.getCommitCount(),
+            formatMessage("COMMIT count", expected, TransactionTracker.getCommitCount())
         );
     }
 
     public void assertRollbackCount(int expected) {
         assertEquals(
-            formatMessage("ROLLBACK count", expected, TransactionTracker.getRollbackCount()),
             expected,
-            TransactionTracker.getRollbackCount()
+            TransactionTracker.getRollbackCount(),
+            formatMessage("ROLLBACK count", expected, TransactionTracker.getRollbackCount())
         );
     }
 
     public void assertTransactionCommitted() {
         assertTrue(
-            "Expected at least one transaction to commit, but none did.\n" + TransactionTracker.getSummary(),
-            TransactionTracker.hasCommitted()
+            TransactionTracker.hasCommitted(),
+            "Expected at least one transaction to commit, but none did.\n" + TransactionTracker.getSummary()
         );
     }
 
     public void assertTransactionRolledBack() {
         assertTrue(
-            "Expected at least one transaction to rollback, but none did.\n" + TransactionTracker.getSummary(),
-            TransactionTracker.hasRolledBack()
+            TransactionTracker.hasRolledBack(),
+            "Expected at least one transaction to rollback, but none did.\n" + TransactionTracker.getSummary()
         );
     }
 
     public void assertNoRollback() {
         assertFalse(
-            "Expected no rollbacks, but rollback occurred.\n" + TransactionTracker.getSummary(),
-            TransactionTracker.hasRolledBack()
+            TransactionTracker.hasRolledBack(),
+            "Expected no rollbacks, but rollback occurred.\n" + TransactionTracker.getSummary()
         );
     }
 
     public void assertAllTransactionsCommitted() {
         assertTrue(
-            "Expected all transactions to commit.\n" + TransactionTracker.getDetailedReport(),
-            TransactionTracker.allTransactionsCommitted()
+            TransactionTracker.allTransactionsCommitted(),
+            "Expected all transactions to commit.\n" + TransactionTracker.getDetailedReport()
         );
     }
 

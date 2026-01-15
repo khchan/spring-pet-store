@@ -4,7 +4,7 @@ import net.ttddyy.dsproxy.ExecutionInfo;
 import net.ttddyy.dsproxy.QueryInfo;
 import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -24,7 +24,9 @@ public class DataSourceProxyConfig {
 
     @Bean
     @Primary
-    public DataSource dataSource(@Autowired DataSource originalDataSource) {
+    public DataSource dataSource(DataSourceProperties properties) {
+        DataSource originalDataSource = properties.initializeDataSourceBuilder().build();
+
         return ProxyDataSourceBuilder.create(originalDataSource)
             .name("QueryTrackingDataSource")
             .listener(new QueryExecutionListener() {

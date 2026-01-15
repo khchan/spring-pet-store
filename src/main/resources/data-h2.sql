@@ -16,3 +16,9 @@ insert into pets_media (pet_entity_id, media_id) values(2, 2);
 
 insert into pet_tags (pet_id, tag_id) values(1, 1);
 insert into pet_tags (pet_id, tag_id) values(2, 2);
+
+-- Reset identity sequences to avoid conflicts with manually-inserted IDs
+ALTER TABLE categories ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE pets ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE media ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE tags ALTER COLUMN id RESTART WITH 100;

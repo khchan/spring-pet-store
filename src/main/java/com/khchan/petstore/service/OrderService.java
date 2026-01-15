@@ -45,7 +45,7 @@ public class OrderService {
      */
     @Transactional
     public PetEntity purchasePet(Long petId) {
-        PetEntity pet = petRepository.findOne(petId);
+        PetEntity pet = petRepository.findById(petId).orElse(null);
         if (pet == null) {
             throw new IllegalArgumentException("Pet not found: " + petId);
         }
@@ -62,7 +62,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public PetEntity purchasePetWithValidation(Long petId, boolean forceRollback) {
-        PetEntity pet = petRepository.findOne(petId);
+        PetEntity pet = petRepository.findById(petId).orElse(null);
         pet.setStatus(Status.SOLD);
         petRepository.save(pet);
 
@@ -79,7 +79,7 @@ public class OrderService {
     @Transactional
     public void purchaseWithAudit(Long petId) {
         // Main transaction: update pet status
-        PetEntity pet = petRepository.findOne(petId);
+        PetEntity pet = petRepository.findById(petId).orElse(null);
         pet.setStatus(Status.SOLD);
         petRepository.save(pet);
 
@@ -95,7 +95,7 @@ public class OrderService {
     @Transactional
     public void purchaseWithNestedSavepoint(Long petId, boolean failNested) {
         // Outer transaction work
-        PetEntity pet = petRepository.findOne(petId);
+        PetEntity pet = petRepository.findById(petId).orElse(null);
         pet.setStatus(Status.PENDING);
         petRepository.save(pet);
 
@@ -120,7 +120,7 @@ public class OrderService {
      */
     public PetEntity purchasePetProgrammatic(Long petId) {
         return txTemplate.execute(status -> {
-            PetEntity pet = petRepository.findOne(petId);
+            PetEntity pet = petRepository.findById(petId).orElse(null);
             pet.setStatus(Status.SOLD);
             return petRepository.save(pet);
         });
@@ -133,7 +133,7 @@ public class OrderService {
         txTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
-                PetEntity pet = petRepository.findOne(petId);
+                PetEntity pet = petRepository.findById(petId).orElse(null);
                 pet.setStatus(Status.SOLD);
                 petRepository.save(pet);
 
@@ -153,7 +153,7 @@ public class OrderService {
         for (Long petId : petIds) {
             // Each iteration is a separate transaction
             txTemplate.execute(status -> {
-                PetEntity pet = petRepository.findOne(petId);
+                PetEntity pet = petRepository.findById(petId).orElse(null);
                 if (pet != null && pet.getStatus() == Status.AVAILABLE) {
                     pet.setStatus(Status.SOLD);
                     petRepository.save(pet);
@@ -170,7 +170,7 @@ public class OrderService {
     public void purchaseWithIndependentAudit(Long petId) {
         // Outer transaction
         txTemplate.execute(outerStatus -> {
-            PetEntity pet = petRepository.findOne(petId);
+            PetEntity pet = petRepository.findById(petId).orElse(null);
             pet.setStatus(Status.SOLD);
             petRepository.save(pet);
 
@@ -181,7 +181,7 @@ public class OrderService {
             innerTx.execute(innerStatus -> {
                 // This runs in a separate transaction
                 // Audit logging, notification, etc.
-                PetEntity auditPet = petRepository.findOne(petId);
+                PetEntity auditPet = petRepository.findById(petId).orElse(null);
                 System.out.println("Audit: Pet " + auditPet.getName() + " purchased");
                 return null;
             });
@@ -203,7 +203,7 @@ public class OrderService {
         TransactionStatus status = transactionManager.getTransaction(def);
 
         try {
-            PetEntity pet = petRepository.findOne(petId);
+            PetEntity pet = petRepository.findById(petId).orElse(null);
             pet.setStatus(Status.SOLD);
             petRepository.save(pet);
 
@@ -230,7 +230,7 @@ public class OrderService {
      */
     @Transactional(timeout = 5)  // 5 second timeout
     public void longRunningPurchase(Long petId) {
-        PetEntity pet = petRepository.findOne(petId);
+        PetEntity pet = petRepository.findById(petId).orElse(null);
         // Simulate long operation
         pet.setStatus(Status.SOLD);
         petRepository.save(pet);
