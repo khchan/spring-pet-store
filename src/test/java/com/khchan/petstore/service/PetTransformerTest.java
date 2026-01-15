@@ -3,15 +3,17 @@ package com.khchan.petstore.service;
 import com.khchan.petstore.domain.*;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.dto.Tag;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 public class PetTransformerTest {
 
     private final Category dogCategory = Category.builder().id(1L).name("Dogs").build();
@@ -19,13 +21,12 @@ public class PetTransformerTest {
     @InjectMocks
     private PetTransformer fixture;
 
-    @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+    @BeforeEach
+    public void setUp() {
     }
 
     @Test
-    public void transformEntityToDTO() throws Exception {
+    public void transformEntityToDTO() {
         PetEntity petEntity = PetEntity.builder()
             .id(1L)
             .name("Fluffy")
@@ -50,7 +51,7 @@ public class PetTransformerTest {
     }
 
     @Test
-    public void transformDTOToEntity() throws Exception {
+    public void transformDTOToEntity() {
         Pet petDTO = Pet.builder()
             .id(1L)
             .name("Fluffy")

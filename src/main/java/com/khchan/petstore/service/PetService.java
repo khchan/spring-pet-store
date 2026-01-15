@@ -28,7 +28,7 @@ public class PetService {
     }
 
     public Pet findPet(Long id) {
-        PetEntity petEntity = petRepository.findOne(id);
+        PetEntity petEntity = petRepository.findById(id).orElse(null);
         return petTransformer.transformEntityToDTO(petEntity);
     }
 
@@ -38,6 +38,6 @@ public class PetService {
     }
 
     public void removePet(Long id) {
-        petRepository.delete(id);
+        petRepository.deleteById(id);
     }
 }

@@ -4,18 +4,20 @@ import com.khchan.petstore.domain.Status;
 import com.khchan.petstore.dto.Pet;
 import com.khchan.petstore.domain.PetEntity;
 import com.khchan.petstore.repository.PetRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 public class PetServiceTest {
 
     @Mock
@@ -27,31 +29,30 @@ public class PetServiceTest {
     @InjectMocks
     private PetService fixture;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
         doReturn(mock(PetEntity.class)).when(petTransformer).transformDTOToEntity(any(Pet.class));
         doReturn(mock(Pet.class)).when(petTransformer).transformEntityToDTO(any(PetEntity.class));
     }
 
     @Test
-    public void findAllPets() throws Exception {
+    public void findAllPets() {
         fixture.findAllPets();
 
         verify(petRepository).findAll();
     }
 
     @Test
-    public void findPet() throws Exception {
+    public void findPet() {
         Long petId = 1L;
 
         fixture.findPet(petId);
 
-        verify(petRepository).findOne(eq(petId));
+        verify(petRepository).findById(eq(petId));
     }
 
     @Test
-    public void savePet() throws Exception {
+    public void savePet() {
         Pet newPetDTO = createPetDTO();
 
         fixture.savePet(newPetDTO);
@@ -60,12 +61,12 @@ public class PetServiceTest {
     }
 
     @Test
-    public void removePet() throws Exception {
+    public void removePet() {
         Long petId = 1L;
 
         fixture.removePet(petId);
 
-        verify(petRepository).delete(eq(petId));
+        verify(petRepository).deleteById(eq(petId));
     }
 
     private Pet createPetDTO() {
