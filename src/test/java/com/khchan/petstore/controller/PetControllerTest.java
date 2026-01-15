@@ -1,7 +1,7 @@
 package com.khchan.petstore.controller;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.annotation.JsonInclude;
+import tools.jackson.databind.ObjectMapper;
 import com.khchan.PetstoreApplication;
 import com.khchan.petstore.domain.PetEntity;
 import com.khchan.petstore.domain.Status;
