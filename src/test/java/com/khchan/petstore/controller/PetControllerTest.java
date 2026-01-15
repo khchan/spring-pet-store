@@ -1,94 +1,120 @@
 package com.khchan.petstore.controller;
 
-import tools.jackson.annotation.JsonInclude;
-import tools.jackson.databind.ObjectMapper;
-import com.khchan.PetstoreApplication;
-import com.khchan.petstore.domain.PetEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.khchan.petstore.domain.Status;
 import com.khchan.petstore.dto.Pet;
-import com.khchan.petstore.repository.PetRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.khchan.petstore.service.PetService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(classes = PetstoreApplication.class)
-@AutoConfigureMockMvc
+@WebMvcTest(PetController.class)
 public class PetControllerTest {
-
-    private Long PET_ID = 1L;
-
-    private MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
-        MediaType.APPLICATION_JSON.getSubtype(),
-        StandardCharsets.UTF_8);
-
-    private ObjectMapper jsonMapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private PetRepository petRepository;
+    private ObjectMapper objectMapper;
 
-    @BeforeEach
-    public void setUp() {
-        petRepository.save(PetEntity.builder()
-            .id(PET_ID)
-            .name("mittens")
-            .status(Status.AVAILABLE)
-            .build());
-    }
+    @MockBean
+    private PetService petService;
 
     @Test
     public void findAllPets() throws Exception {
+        List<Pet> pets = Arrays.asList(
+            createPet(1L, "Fluffy"),
+            createPet(2L, "Spot")
+        );
+        doReturn(pets).when(petService).findAllPets();
+
         mockMvc.perform(get("/pets"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(contentType));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("Fluffy"))
+            .andExpect(jsonPath("$[1].id").value(2))
+            .andExpect(jsonPath("$[1].name").value("Spot"));
+
+        verify(petService).findAllPets();
     }
 
     @Test
     public void findPet() throws Exception {
-        mockMvc.perform(get("/pet/" + PET_ID.toString()))
+        Long petId = 1L;
+        Pet pet = createPet(petId, "Fluffy");
+        doReturn(pet).when(petService).findPet(eq(petId));
+
+        mockMvc.perform(get("/pet/{id}", petId))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(contentType));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.name").value("Fluffy"));
+
+        verify(petService).findPet(eq(petId));
     }
 
     @Test
     public void createPet() throws Exception {
-        Pet pet = Pet.builder().name("Timmy").status(Status.SOLD).build();
+        Pet newPet = createPet(null, "NewPet");
+        Pet savedPet = createPet(1L, "NewPet");
+        doReturn(savedPet).when(petService).savePet(any(Pet.class));
 
         mockMvc.perform(post("/pet")
-            .header("Content-Type", "application/json")
-            .content(jsonMapper.writeValueAsString(pet)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newPet)))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType(contentType));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.name").value("NewPet"));
+
+        verify(petService).savePet(any(Pet.class));
     }
 
     @Test
     public void updatePet() throws Exception {
-        Pet pet = Pet.builder().id(1L).name("Timmy").status(Status.SOLD).build();
+        Pet pet = createPet(1L, "UpdatedPet");
+        doReturn(pet).when(petService).savePet(any(Pet.class));
 
         mockMvc.perform(put("/pet")
-            .header("Content-Type", "application/json")
-            .content(jsonMapper.writeValueAsString(pet)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(pet)))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(contentType));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.name").value("UpdatedPet"));
+
+        verify(petService).savePet(any(Pet.class));
     }
 
     @Test
     public void removePet() throws Exception {
-        mockMvc.perform(delete("/pet/" + PET_ID.toString())
-            .header("Content-Type", "application/json"))
+        Long petId = 1L;
+
+        mockMvc.perform(delete("/pet/{id}", petId))
             .andExpect(status().isOk());
+
+        verify(petService).removePet(eq(petId));
     }
 
+    private Pet createPet(Long id, String name) {
+        return Pet.builder()
+            .id(id)
+            .name(name)
+            .status(Status.AVAILABLE)
+            .build();
+    }
 }
