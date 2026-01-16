@@ -1,6 +1,11 @@
 package com.khchan.petstore.domain;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
@@ -38,6 +43,7 @@ public class PetEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Category category;
 
     /**
@@ -47,6 +53,7 @@ public class PetEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Owner owner;
 
     /**
@@ -55,6 +62,7 @@ public class PetEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "breed_id")
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Breed breed;
 
     /**
@@ -65,41 +73,47 @@ public class PetEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "insurance_id")
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private PetInsurance insurance;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Media> media = new ArrayList<>();
 
-    @ManyToMany(cascade = CascadeType.MERGE)
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinTable(name = "pet_tags",
         joinColumns = @JoinColumn(name = "pet_id"),
         inverseJoinColumns = @JoinColumn(name = "tag_id"))
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<TagEntity> tags = new ArrayList<>();
 
     /**
      * OneToMany to Appointments - CASCADE.PERSIST and MERGE only.
      * Appointments involve veterinarians, so we don't want to delete them automatically.
      */
-    @OneToMany(mappedBy = "pet", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "pet", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Appointment> appointments = new ArrayList<>();
 
     /**
      * OneToMany to MedicalRecords - CASCADE.ALL and orphanRemoval.
      * Medical records are owned by the pet and should be deleted with it.
      */
-    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<MedicalRecord> medicalRecords = new ArrayList<>();
 
     /**
      * OneToMany to Vaccinations - CASCADE.ALL and orphanRemoval.
      * Vaccination records are owned by the pet and should be deleted with it.
      */
-    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Vaccination> vaccinations = new ArrayList<>();
 
     // Helper methods to maintain bidirectional relationships

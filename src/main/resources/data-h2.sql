@@ -50,13 +50,13 @@ values(3, 'POL-2024-003', 'BestFriend Coverage', 3000.00, 29.99, '2023-12-01', '
 insert into pets (id, name, status, category_id, owner_id, breed_id, insurance_id)
 values(1, 'Fluffy', 'AVAILABLE', 1, 1, 1, 1);
 
-insert into pets (id, name, status, category_id, owner_id, breed_id)
+insert into pets (id, name, status, category_id, owner_id, breed_id, insurance_id)
 values(2, 'Spot', 'AVAILABLE', 2, 1, 3, null);
 
 insert into pets (id, name, status, category_id, owner_id, breed_id, insurance_id)
 values(3, 'Cthulu', 'AVAILABLE', 2, 2, 4, 2);
 
-insert into pets (id, name, status, category_id, owner_id, breed_id)
+insert into pets (id, name, status, category_id, owner_id, breed_id, insurance_id)
 values(4, 'Whiskers', 'AVAILABLE', 1, 2, 2, null);
 
 insert into pets (id, name, status, category_id, owner_id, breed_id, insurance_id)
@@ -126,11 +126,6 @@ values(4, 4, 3, '2024-07-25 11:00:00', 'New patient exam', 'First visit for this
 
 insert into appointments (id, pet_id, veterinarian_id, date_time, reason, notes, status)
 values(5, 5, 3, '2024-07-18 15:00:00', 'Sprain follow-up', 'Check recovery from injury', 'CONFIRMED');
-
--- Update pet_insurance to link back to pets (for bidirectional relationship)
-update pet_insurance set pet_id = 1 where id = 1;
-update pet_insurance set pet_id = 3 where id = 2;
-update pet_insurance set pet_id = 5 where id = 3;
 
 -- Reset identity sequences to avoid conflicts with manually-inserted IDs
 ALTER TABLE categories ALTER COLUMN id RESTART WITH 100;

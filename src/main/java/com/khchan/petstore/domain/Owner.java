@@ -3,7 +3,9 @@ package com.khchan.petstore.domain;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +38,9 @@ public class Owner {
      * CASCADE.ALL: All operations (PERSIST, MERGE, REMOVE, REFRESH, DETACH) cascade to pets.
      * orphanRemoval = true: If a pet is removed from this collection, it will be deleted.
      */
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<PetEntity> pets = new ArrayList<>();
 
     public Owner(String firstName, String lastName, String email, String phone, Address address) {

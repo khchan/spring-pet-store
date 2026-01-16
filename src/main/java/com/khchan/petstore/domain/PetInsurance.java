@@ -3,6 +3,7 @@ package com.khchan.petstore.domain;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -29,6 +30,7 @@ public class PetInsurance {
      */
     @OneToOne(mappedBy = "insurance", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private PetEntity pet;
 
     private String policyNumber;

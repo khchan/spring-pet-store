@@ -3,7 +3,9 @@ package com.khchan.petstore.domain;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +34,9 @@ public class Clinic {
      * CASCADE.PERSIST and MERGE only - removing a clinic doesn't delete veterinarians.
      * They should be reassigned to another clinic instead.
      */
-    @OneToMany(mappedBy = "clinic", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "clinic", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Veterinarian> veterinarians = new ArrayList<>();
 
     public Clinic(String name, String phone, Address address) {

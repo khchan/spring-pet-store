@@ -3,6 +3,7 @@ package com.khchan.petstore.domain;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -25,6 +26,7 @@ public class Vaccination {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private PetEntity pet;
 
     private String vaccineName;
@@ -34,6 +36,7 @@ public class Vaccination {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "administered_by")
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Veterinarian administeredBy;
 
     @Column(length = 500)
