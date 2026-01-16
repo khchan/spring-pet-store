@@ -1,15 +1,16 @@
 package com.khchan.petstore.repository;
 
 import com.khchan.petstore.domain.*;
+import com.khchan.petstore.test.DataSourceProxyConfig;
 import com.khchan.petstore.test.JpaQueryTrackingRule;
 import com.khchan.petstore.test.QueryCounter;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -29,8 +30,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 4. Batch fetching strategies
  */
 @SpringBootTest
-@ExtendWith({SpringExtension.class, JpaQueryTrackingRule.class})
+@Import(DataSourceProxyConfig.class)
 public class EntityGraphQueryOptimizationTest {
+
+    @RegisterExtension
+    JpaQueryTrackingRule tracking = new JpaQueryTrackingRule()
+            .printQueriesOnFailure(true);
 
     @Autowired
     private OwnerRepository ownerRepository;
@@ -48,6 +53,15 @@ public class EntityGraphQueryOptimizationTest {
     private ClinicRepository clinicRepository;
 
     @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private MedicalRecordRepository medicalRecordRepository;
+
+    @Autowired
+    private VaccinationRepository vaccinationRepository;
+
+    @Autowired
     private EntityManager entityManager;
 
     private Owner owner1;
@@ -55,11 +69,15 @@ public class EntityGraphQueryOptimizationTest {
     private Breed goldenRetriever;
     private Breed labrador;
     private Veterinarian drSmith;
+    private Long clinicId;
 
     @BeforeEach
     @Transactional
     public void setUp() {
-        // Clean up
+        // Clean up - delete in order to respect foreign key constraints
+        appointmentRepository.deleteAll();
+        medicalRecordRepository.deleteAll();
+        vaccinationRepository.deleteAll();
         ownerRepository.deleteAll();
         petRepository.deleteAll();
         breedRepository.deleteAll();
@@ -76,6 +94,7 @@ public class EntityGraphQueryOptimizationTest {
         // Create clinic and vet
         Address clinicAddress = new Address("123 Vet St", "Boston", "MA", "02101", "USA");
         Clinic clinic = clinicRepository.save(new Clinic("Main Clinic", "555-0100", clinicAddress));
+        clinicId = clinic.getId();
         drSmith = new Veterinarian("John", "Smith", "General", "VET123");
         drSmith.setClinic(clinic);
         drSmith = veterinarianRepository.save(drSmith);
@@ -170,7 +189,7 @@ public class EntityGraphQueryOptimizationTest {
         assertThat(owner.getPets()).hasSize(3);
 
         // Assert - Should only be 1 SELECT query
-        JpaQueryTrackingRule.assertSelectCount(1);
+        assertThat(QueryCounter.getSelectCount()).isEqualTo(1);
     }
 
     /**
@@ -221,62 +240,52 @@ public class EntityGraphQueryOptimizationTest {
     }
 
     /**
-     * Solution: Custom repository method with JOIN FETCH for multiple levels.
+     * Demonstrates that fetching multiple bags (List collections) throws MultipleBagFetchException.
+     * This is a Hibernate limitation - cannot fetch multiple Lists in a single query.
      */
     @Test
     @Transactional
-    public void testOptimized_FetchEntireGraphWithJPQL() {
+    public void testMultipleBagFetchException_WithNestedCollections() {
         QueryCounter.reset();
 
-        // Act - Custom JPQL query that fetches everything in one go
-        List<Owner> owners = entityManager.createQuery(
-            "SELECT DISTINCT o FROM Owner o " +
-            "LEFT JOIN FETCH o.pets p " +
-            "LEFT JOIN FETCH p.breed " +
-            "LEFT JOIN FETCH p.medicalRecords",
-            Owner.class
-        ).getResultList();
-
-        // Access all levels - should NOT trigger additional queries
-        for (Owner owner : owners) {
-            for (PetEntity pet : owner.getPets()) {
-                pet.getBreed().getName();
-                pet.getMedicalRecords().size();
-            }
-        }
-
-        // Assert - Should be just 1 SELECT (or very few due to collection fetching limitations)
-        int selectCount = QueryCounter.getSelectCount();
-        assertThat(selectCount).isLessThanOrEqualTo(3); // May need multiple due to multiple collections
+        // Act & Assert - This query will fail because it tries to fetch multiple bags
+        // Owner.pets is a List, and PetEntity.medicalRecords is also a List
+        assertThat(org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> entityManager.createQuery(
+                "SELECT DISTINCT o FROM Owner o " +
+                "LEFT JOIN FETCH o.pets p " +
+                "LEFT JOIN FETCH p.breed " +
+                "LEFT JOIN FETCH p.medicalRecords",
+                Owner.class
+            ).getResultList()
+        )).hasMessageContaining("MultipleBagFetchException");
     }
 
     /**
-     * Test fetching with multiple collections.
-     * Fetching multiple collections in one query can cause Cartesian product.
+     * Test fetching with multiple collections demonstrates the MultipleBagFetchException.
+     * Hibernate cannot fetch multiple List collections in a single query.
      * Best practice is to fetch collections in separate queries or use batch fetching.
      */
     @Test
     @Transactional
-    public void testCartesianProduct_MultipleCollections() {
+    public void testCartesianProduct_MultipleCollections_ThrowsException() {
         QueryCounter.reset();
 
-        // This can cause Cartesian product
-        // If a pet has 3 medical records and 2 vaccinations, you get 3*2=6 rows
-        List<PetEntity> pets = entityManager.createQuery(
-            "SELECT DISTINCT p FROM PetEntity p " +
-            "LEFT JOIN FETCH p.medicalRecords " +
-            "LEFT JOIN FETCH p.vaccinations",
-            PetEntity.class
-        ).getResultList();
+        // This query will fail because both medicalRecords and vaccinations are Lists
+        // Hibernate cannot fetch multiple bags simultaneously
+        assertThat(org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> entityManager.createQuery(
+                "SELECT DISTINCT p FROM PetEntity p " +
+                "LEFT JOIN FETCH p.medicalRecords " +
+                "LEFT JOIN FETCH p.vaccinations",
+                PetEntity.class
+            ).getResultList()
+        )).hasMessageContaining("MultipleBagFetchException");
 
-        // Verify data is loaded
-        for (PetEntity pet : pets) {
-            assertThat(pet.getMedicalRecords()).isNotNull();
-            assertThat(pet.getVaccinations()).isNotNull();
-        }
-
-        // Note: This works but can be inefficient with large datasets
-        // Better approach is to use separate queries or @BatchSize
+        // Note: To avoid this, change collections from List to Set,
+        // or fetch collections in separate queries
     }
 
     /**
@@ -306,11 +315,15 @@ public class EntityGraphQueryOptimizationTest {
         // Assert - Should have 2 queries (one for each collection)
         assertThat(QueryCounter.getSelectCount()).isEqualTo(2);
 
-        // Verify all data is loaded
+        // Verify medical records are loaded (all pets have medical records)
         for (PetEntity pet : pets) {
             assertThat(pet.getMedicalRecords()).isNotEmpty();
-            assertThat(pet.getVaccinations()).isNotEmpty();
         }
+
+        // Verify at least some pets have vaccinations (owner1's pets have them)
+        boolean someHaveVaccinations = pets.stream()
+            .anyMatch(pet -> !pet.getVaccinations().isEmpty());
+        assertThat(someHaveVaccinations).isTrue();
     }
 
     /**
@@ -322,15 +335,13 @@ public class EntityGraphQueryOptimizationTest {
         QueryCounter.reset();
 
         // Use repository method with JOIN FETCH
-        Clinic clinic = clinicRepository.findByIdWithVeterinarians(
-            clinicRepository.findAll().get(0).getId()
-        ).orElseThrow();
+        Clinic clinic = clinicRepository.findByIdWithVeterinarians(clinicId).orElseThrow();
 
         // Access veterinarians - should not trigger new query
         assertThat(clinic.getVeterinarians()).hasSize(1);
 
         // Assert - Only 1 query
-        JpaQueryTrackingRule.assertSelectCount(1);
+        assertThat(QueryCounter.getSelectCount()).isEqualTo(1);
     }
 
     /**
