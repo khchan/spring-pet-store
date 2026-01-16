@@ -6,23 +6,20 @@ import com.khchan.petstore.dto.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
 public class PetTransformerTest {
 
     private final Category dogCategory = Category.builder().id(1L).name("Dogs").build();
 
-    @InjectMocks
     private PetTransformer fixture;
 
     @BeforeEach
     public void setUp() {
+        fixture = new PetTransformer();
     }
 
     @Test

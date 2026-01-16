@@ -23,6 +23,6 @@ public class TagEntity {
     @Column(name = "name")
     private String name;
 
-    @ManyToMany(cascade = CascadeType.MERGE, mappedBy = "tags")
+    @ManyToMany(cascade = CascadeType.MERGE, mappedBy = "tags", fetch = FetchType.LAZY)
     private List<PetEntity> pets;
 }
