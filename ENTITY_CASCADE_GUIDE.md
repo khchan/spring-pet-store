@@ -202,9 +202,19 @@ Prevents NullPointerException when adding items.
 
 ### 6. Use JOIN FETCH for Query Optimization
 
+Available JOIN FETCH methods in this codebase:
 ```java
+// OwnerRepository
 @Query("SELECT o FROM Owner o LEFT JOIN FETCH o.pets WHERE o.id = :id")
 Optional<Owner> findByIdWithPets(Long id);
+
+// ClinicRepository
+@Query("SELECT c FROM Clinic c LEFT JOIN FETCH c.veterinarians WHERE c.id = :id")
+Optional<Clinic> findByIdWithVeterinarians(Long id);
+
+// AppointmentRepository
+@Query("SELECT a FROM Appointment a JOIN FETCH a.pet JOIN FETCH a.veterinarian WHERE a.id = :id")
+Appointment findByIdWithDetails(Long id);
 ```
 
 Avoids N+1 queries by loading related entities in one query.
@@ -243,17 +253,68 @@ SELECT p FROM Pet p LEFT JOIN FETCH p.vaccinations WHERE p IN :pets
 | PetInsurance | Pet | - | Yes |
 | Appointment | Pet | - | No |
 
+## Repository Methods
+
+Each entity has a corresponding repository with custom query methods:
+
+### OwnerRepository
+- `findByEmail(String email)` - Find owner by email
+- `findByLastName(String lastName)` - Find owners by last name
+- `findByIdWithPets(Long id)` - **JOIN FETCH** loads owner with pets in single query
+
+### PetRepository
+- Standard `JpaRepository` methods only
+
+### AppointmentRepository
+- `findByPetId(Long petId)` - Find appointments for a pet
+- `findByVeterinarianId(Long veterinarianId)` - Find appointments for a vet
+- `findByStatus(AppointmentStatus status)` - Find by appointment status
+- `findByVeterinarianIdAndDateTimeBetween(vetId, start, end)` - Vet schedule lookup
+- `findByIdWithDetails(Long id)` - **JOIN FETCH** loads appointment with pet and veterinarian
+
+### VeterinarianRepository
+- `findByLicenseNumber(String licenseNumber)` - Find by license
+- `findBySpecialty(String specialty)` - Find vets by specialty
+- `findByClinicId(Long clinicId)` - Find vets at a clinic
+
+### ClinicRepository
+- `findByName(String name)` - Find clinic by name
+- `findByAddress_City(String city)` - Find clinics by embedded address city
+- `findByIdWithVeterinarians(Long id)` - **JOIN FETCH** loads clinic with vets
+
+### BreedRepository
+- `findByName(String name)` - Find breed by name
+- `findBySize(Size size)` - Find breeds by size enum
+
+### MedicalRecordRepository
+- `findByPetId(Long petId)` - Find records for a pet
+- `findByVeterinarianId(Long veterinarianId)` - Find records by vet
+- `findByPetIdOrderByVisitDateDesc(Long petId)` - Pet's records newest first
+- `findByPetIdAndDateRange(petId, startDate, endDate)` - Records in date range
+
+### VaccinationRepository
+- `findByPetId(Long petId)` - Find vaccinations for a pet
+- `findByVaccineName(String vaccineName)` - Find by vaccine type
+- `findOverdueVaccinations(LocalDate date)` - Find all overdue vaccinations
+- `findByPetIdOrderByDateDesc(Long petId)` - Pet's vaccinations newest first
+
+### PetInsuranceRepository
+- `findByPolicyNumber(String policyNumber)` - Find by policy number
+- `findByProvider(String provider)` - Find by insurance provider
+- `findByStatus(InsuranceStatus status)` - Find by insurance status
+- `findByPetId(Long petId)` - Find insurance for a pet
+
 ## Running Tests
 
 ```bash
 # Run cascade tests
-mvn test -Dtest=EntityCascadeTest
+./mvnw test -Dtest=EntityCascadeTest
 
 # Run query optimization tests
-mvn test -Dtest=EntityGraphQueryOptimizationTest
+./mvnw test -Dtest=EntityGraphQueryOptimizationTest
 
 # Run all tests
-mvn test
+./mvnw test
 ```
 
 ## Key Learnings
