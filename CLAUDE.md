@@ -11,30 +11,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run all tests
 ./mvnw test
 
+# Run tests for a specific module
+./mvnw test -pl petstore-service
+
 # Run a single test class
-./mvnw test -Dtest=PetServiceTest
+./mvnw test -pl petstore-service -Dtest=PetServiceTest
 
 # Run a single test method
-./mvnw test -Dtest=PetServiceTest#testFindAllPets
+./mvnw test -pl petstore-service -Dtest=PetServiceTest#testFindAllPets
 
 # Run the application (starts on port 8080)
-./mvnw spring-boot:run
+./mvnw spring-boot:run -pl petstore-web
 ```
 
 ## Architecture Overview
 
 This is a Spring Boot 3.5 pet store application using Java 17, JPA/Hibernate with H2 in-memory database.
 
+### Multi-Module Structure
+
+```
+petstore-parent/                     (Parent POM)
+├── petstore-domain/                 (JPA entities, DTOs, enums)
+├── petstore-data/                   (Spring Data JPA repositories)
+├── petstore-service/                (Business logic layer)
+├── petstore-web/                    (REST API, Spring Boot app)
+└── petstore-test-support/           (Shared test infrastructure)
+```
+
+Module dependencies flow: `domain → data → service → web`
+
 ### Layer Structure
 
-- **Controllers** (`controller/`): REST endpoints. Currently only `PetController` exposing `/pets` and `/pet/{id}` endpoints.
-- **Services** (`service/`): Business logic layer with two patterns:
+- **petstore-domain**: JPA entities with Lombok annotations, DTOs for API responses
+- **petstore-data**: Spring Data JPA interfaces extending `JpaRepository`
+- **petstore-service**: Business logic layer with two patterns:
   - Simple services (e.g., `PetService`, `OwnerService`) - CRUD operations with repository delegation
   - Orchestration services (e.g., `PetCareOrchestrationService`) - coordinate multiple services in a single transaction
-- **Repositories** (`repository/`): Spring Data JPA interfaces extending `JpaRepository`
-- **Domain** (`domain/`): JPA entities with Lombok annotations
-- **DTOs** (`dto/`): Data transfer objects for API responses (e.g., `Pet`, `Tag`)
-- **Transformers** (`service/PetTransformer`): Convert between entities and DTOs
+- **petstore-web**: REST endpoints and Spring Boot application entry point
+- **petstore-test-support**: Shared test utilities (query tracking, transaction tracking)
 
 ### Domain Model
 
@@ -51,7 +66,7 @@ All relationships use `FetchType.LAZY`. Entity classes use Lombok `@Data`, `@Bui
 
 ### Test Infrastructure
 
-The project includes a custom query tracking system for N+1 detection:
+The project includes a custom query tracking system for N+1 detection in `petstore-test-support`:
 
 - **`JpaQueryTrackingRule`**: JUnit 5 extension for tracking SQL queries and transactions
 - **`QueryCounter`**: Counts SELECT/INSERT/UPDATE/DELETE queries
